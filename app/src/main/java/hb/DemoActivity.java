@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewOverlay;
 import android.widget.Button;
 
 import hb.swipeback.R;
@@ -43,7 +44,9 @@ public class DemoActivity extends SwipeBackActivity {
                 startActivity(intent);
             }
         });
+        ViewOverlay overlay = button.getOverlay();
     }
+
 
     @Override
     protected SwipeBackActivity.SwipeBackHelper createSwipeHelper() {
