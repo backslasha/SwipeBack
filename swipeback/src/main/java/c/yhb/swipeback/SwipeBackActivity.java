@@ -1,4 +1,4 @@
-package hb.swipeback;
+package c.yhb.swipeback;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;

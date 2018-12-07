@@ -2,7 +2,8 @@ package hb;
 
 import android.app.Application;
 
-import hb.swipeback.SwipeBackSupport;
+import c.yhb.swipeback.SwipeBackSupport;
+
 
 public class SwipeBackApplication extends Application {
 

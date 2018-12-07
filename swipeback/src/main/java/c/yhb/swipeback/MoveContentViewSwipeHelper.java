@@ -1,4 +1,4 @@
-package hb.swipeback;
+package c.yhb.swipeback;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.FrameLayout;
 
-import hb.util.ScreenUtils;
+import c.yhb.util.ScreenUtils;
 
 public class MoveContentViewSwipeHelper implements SwipeBackActivity.SwipeBackHelper {
 
@@ -32,6 +32,7 @@ public class MoveContentViewSwipeHelper implements SwipeBackActivity.SwipeBackHe
         this.mScreenWidth = ScreenUtils.getScreenWidth(curActivity);
     }
 
+
     @Override
     public boolean handleTouchEvent(MotionEvent event) {
         float rawX = event.getRawX();
@@ -41,7 +42,9 @@ public class MoveContentViewSwipeHelper implements SwipeBackActivity.SwipeBackHe
                     return false;
                 }
                 if (downInLeftEdge(event)) {
+                    long time = System.currentTimeMillis();
                     readyDragging();
+                    Log.d(TAG, getClass().getSimpleName() + ":readyDragging: " + (System.currentTimeMillis() - time) + " ms");
                     return true; // consumed and stop dispatching
                 }
                 break;
@@ -59,7 +62,9 @@ public class MoveContentViewSwipeHelper implements SwipeBackActivity.SwipeBackHe
             case MotionEvent.ACTION_POINTER_UP: // prevent from mess of second figure
             case MotionEvent.ACTION_UP:
                 if (mDragging) {
+                    long time = System.currentTimeMillis();
                     stopDraggingAt(rawX);
+                    Log.d(TAG, getClass().getSimpleName() + ":stopDraggingAt: " + (System.currentTimeMillis() - time) + " ms");
                     return true; // consumed and stop dispatching
                 }
                 break;
@@ -191,12 +196,12 @@ public class MoveContentViewSwipeHelper implements SwipeBackActivity.SwipeBackHe
     }
 
     private void restoreEverything() {
-        ViewGroup curDecorView =  (ViewGroup) mCurActivity.getWindow().getDecorView();
+        ViewGroup curDecorView = (ViewGroup) mCurActivity.getWindow().getDecorView();
         curDecorView.removeView(mPreRootView);
         curDecorView.removeView(mShadowView);
 
         ViewGroup preDecorView = (ViewGroup) mPreActivity.getWindow().getDecorView();
-        preDecorView.addView(mPreRootView,0);
+        preDecorView.addView(mPreRootView, 0);
         mPreRootView.setX(0);
 
         mDragging = false;

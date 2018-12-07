@@ -1,4 +1,4 @@
-package hb.swipeback;
+package c.yhb.swipeback;
 
 import android.app.Activity;
 import android.app.Application;

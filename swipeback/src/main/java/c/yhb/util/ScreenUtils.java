@@ -1,4 +1,4 @@
-package hb.util;
+package c.yhb.util;
 
 import android.app.Activity;
 import android.content.Context;
@@ -7,6 +7,7 @@ import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
+
 /**
  * 获得屏幕相关的辅助类
  *

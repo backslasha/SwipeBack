@@ -1,4 +1,4 @@
-package hb.swipeback;
+package c.yhb.swipeback;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -14,14 +14,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.AccelerateInterpolator;
 import android.widget.FrameLayout;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import hb.util.ScreenUtils;
+import c.yhb.util.ScreenUtils;
 
 @RequiresApi(Build.VERSION_CODES.KITKAT)
 public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackHelper {
@@ -53,7 +52,9 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
                     return false;
                 }
                 if (downInLeftEdge(event)) {
+                    long time = System.currentTimeMillis();
                     readyDragging();
+                    Log.d(TAG, getClass().getSimpleName() + ":readyDragging: " + (System.currentTimeMillis() - time) + " ms");
                     return true; // consumed and stop dispatching
                 }
                 break;
@@ -74,7 +75,9 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
             case MotionEvent.ACTION_POINTER_UP: // prevent from mess of second figure
             case MotionEvent.ACTION_UP:
                 if (mDragging) {
+                    long time = System.currentTimeMillis();
                     stopDraggingAt(rawX);
+                    Log.d(TAG, getClass().getSimpleName() + ":stopDraggingAt: " + (System.currentTimeMillis() - time) + " ms");
                     return true; // consumed and stop dispatching
                 }
                 break;
@@ -269,6 +272,7 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
     private void restoreEverything() {
         convertActivityFromTranslucent(mCurActivity);
         ((ViewGroup) mCurRootView.getParent()).removeView(mShadowView);
+        mPreRootView.setX(0);
         mDragging = false;
         mAnimating = false;
         isTranslucentComplete = false;

@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="hb.swipeback">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:name="hb.SwipeBackApplication"
         android:allowBackup="true"
@@ -19,9 +20,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="hb.DemoActivity"
-            android:theme="@style/AppTheme.TransparentTheme" />
+        <activity android:name="hb.DemoActivity" />
+        <activity android:name="hb.FrescoActivity" />
     </application>
 
 </manifest>
