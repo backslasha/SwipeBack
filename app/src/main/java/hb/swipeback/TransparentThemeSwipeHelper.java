@@ -14,6 +14,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
+import android.widget.FrameLayout;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -25,13 +27,15 @@ import hb.util.ScreenUtils;
 public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackHelper {
 
     private static final String TAG = "TransparentSwipeHelper";
+    private static final int SHADOW_WIDTH = 30; //阴影宽度
 
     private AppCompatActivity mCurActivity, mPreActivity;
     private int mScreenWidth;
     private boolean mDragging;
     private boolean isTranslucentComplete; // window is in process of converting to transparent or reversely
     private boolean mAnimating;
-    private View mCurRootView, mPreRootView;
+    private ViewGroup mCurRootView, mPreRootView;
+    private View mShadowView; // 阴影
 
     public TransparentThemeSwipeHelper(AppCompatActivity curActivity) {
         this.mCurActivity = curActivity;
@@ -41,6 +45,8 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
 
     @Override
     public boolean handleTouchEvent(MotionEvent event) {
+        float rawX = event.getRawX();
+
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 if (mAnimating || mDragging) {
@@ -56,17 +62,19 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
                     return false;
                 }
                 if (!isTranslucentComplete) {
-                    return false; // to avoid see the black behind the cur activity, allow swipe only after cur activity is completely transparent
+                    return true; // to avoid see the black behind the cur activity, allow swipe only after cur activity is completely transparent
                 }
                 if (mDragging) {
-                    draggingTo(event.getRawX());
+                    if (!(Math.abs(mCurRootView.getX() - rawX) < 3)) {
+                        draggingTo(rawX);
+                    }
                     return true; // consumed and stop dispatching
                 }
                 break;
             case MotionEvent.ACTION_POINTER_UP: // prevent from mess of second figure
             case MotionEvent.ACTION_UP:
                 if (mDragging) {
-                    stopDraggingAt(event.getRawX());
+                    stopDraggingAt(rawX);
                     return true; // consumed and stop dispatching
                 }
                 break;
@@ -85,8 +93,18 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
             return;
         }
 
-        mCurRootView = ((ViewGroup) mCurActivity.getWindow().getDecorView()).getChildAt(0);
-        mPreRootView = ((ViewGroup) mPreActivity.getWindow().getDecorView()).getChildAt(0);
+        ViewGroup curDecorView = (ViewGroup) mCurActivity.getWindow().getDecorView();
+        ViewGroup preDecorView = (ViewGroup) mPreActivity.getWindow().getDecorView();
+
+        mCurRootView = (ViewGroup) curDecorView.getChildAt(0);
+        mPreRootView = (ViewGroup) preDecorView.getChildAt(0);
+
+        if (mShadowView == null) {
+            mShadowView = new ShadowView(mCurActivity);
+        }
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(SHADOW_WIDTH, FrameLayout.LayoutParams.MATCH_PARENT);
+        curDecorView.addView(mShadowView,  params);
+        mShadowView.setX(-SHADOW_WIDTH);
 
         mPreRootView.setX(-mScreenWidth / 3);
 
@@ -96,7 +114,7 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
     }
 
     private boolean downInLeftEdge(MotionEvent event) {
-        return event.getRawX() < mScreenWidth / 5;
+        return event.getRawX() < mScreenWidth / 15;
     }
 
     private void convertActivityToTranslucent(AppCompatActivity activity) {
@@ -141,7 +159,7 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
                 Method convertToTranslucent = Activity.class.getDeclaredMethod("convertToTranslucent", mTranslucentConversionListenerClass, ActivityOptions.class);
                 convertToTranslucent.setAccessible(true);
                 convertToTranslucent.invoke(activity, translucentConversionListener, options);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 @SuppressLint("PrivateApi")
                 Method convertToTranslucent = Activity.class.getDeclaredMethod("convertToTranslucent", mTranslucentConversionListenerClass);
                 convertToTranslucent.setAccessible(true);
@@ -179,8 +197,9 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
 
     private void draggingTo(float x) {
         mCurRootView.setX(x);
+        mShadowView.setX(x - SHADOW_WIDTH);
         mPreRootView.setX(-mScreenWidth / 3 + x / 3);
-        Log.d(TAG, "draggingTo: ");
+        Log.d(TAG, "draggingTo: " + x);
     }
 
     private void stopDraggingAt(float x) {
@@ -200,8 +219,7 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 int x = (int) animation.getAnimatedValue();
-                mCurRootView.setX(x);
-                mPreRootView.setX(-mScreenWidth / 3 + x / 3);
+                slidingTo(x);
             }
         });
 
@@ -229,8 +247,7 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 int x = (int) animation.getAnimatedValue();
-                mCurRootView.setX(x);
-                mPreRootView.setX(-mScreenWidth / 3 + x / 3);
+                slidingTo(x);
             }
         });
 
@@ -247,8 +264,13 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
         mAnimating = true;
     }
 
+    private void slidingTo(int x) {
+        draggingTo(x);
+    }
+
     private void restoreEverything() {
         convertActivityFromTranslucent(mCurActivity);
+        ((ViewGroup) mCurRootView.getParent()).removeView(mShadowView);
         mDragging = false;
         mAnimating = false;
         isTranslucentComplete = false;

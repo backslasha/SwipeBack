@@ -44,7 +44,6 @@ public class DemoActivity extends SwipeBackActivity {
                 startActivity(intent);
             }
         });
-        ViewOverlay overlay = button.getOverlay();
     }
 
 
