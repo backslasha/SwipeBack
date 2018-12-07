@@ -99,11 +99,9 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
         mCurRootView = (ViewGroup) curDecorView.getChildAt(0);
         mPreRootView = (ViewGroup) preDecorView.getChildAt(0);
 
-        if (mShadowView == null) {
-            mShadowView = new ShadowView(mCurActivity);
-        }
+        mShadowView = new ShadowView(mCurActivity);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(SHADOW_WIDTH, FrameLayout.LayoutParams.MATCH_PARENT);
-        curDecorView.addView(mShadowView,  params);
+        curDecorView.addView(mShadowView, params);
         mShadowView.setX(-SHADOW_WIDTH);
 
         mPreRootView.setX(-mScreenWidth / 3);

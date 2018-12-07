@@ -1,25 +1,37 @@
 package hb;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewOverlay;
 import android.widget.Button;
 
+import hb.swipeback.MoveContentViewSwipeHelper;
 import hb.swipeback.R;
 import hb.swipeback.SwipeBackActivity;
 import hb.swipeback.TransparentThemeSwipeHelper;
 
 public class DemoActivity extends SwipeBackActivity {
 
-    private static int count = 0;
+    private int mCount = 0;
+
+    public static Intent newIntent(Context context, int count) {
+        Intent intent = new Intent(context, DemoActivity.class);
+        intent.putExtra("count", count);
+        return intent;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_demo);
+
+        Intent intent = getIntent();
+        if (intent != null) {
+            mCount = intent.getIntExtra("count", 1);
+        }
 
         int argb = Color.argb(
                 255,
@@ -30,7 +42,7 @@ public class DemoActivity extends SwipeBackActivity {
 
         android.support.v7.app.ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setTitle("The " + ++count + " activity.");
+            actionBar.setTitle("The " + mCount + " activity.");
             actionBar.setBackgroundDrawable(new ColorDrawable(argb));
             findViewById(android.R.id.content).setBackgroundColor(argb);
         }
@@ -40,7 +52,7 @@ public class DemoActivity extends SwipeBackActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(DemoActivity.this, DemoActivity.class);
+                Intent intent = DemoActivity.newIntent(DemoActivity.this, mCount + 1);
                 startActivity(intent);
             }
         });
@@ -49,6 +61,12 @@ public class DemoActivity extends SwipeBackActivity {
 
     @Override
     protected SwipeBackActivity.SwipeBackHelper createSwipeHelper() {
+        switch (MainActivity.sType) {
+            case MainActivity.TYPE_MOVE_CONTENT_VIEW:
+                return new MoveContentViewSwipeHelper(this);
+            case MainActivity.TYPE_DYNAMIC_TRANSPARENT:
+                return new TransparentThemeSwipeHelper(this);
+        }
         return new TransparentThemeSwipeHelper(this);
     }
 }
