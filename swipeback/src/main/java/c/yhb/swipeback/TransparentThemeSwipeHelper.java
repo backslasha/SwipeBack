@@ -63,7 +63,7 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
                     return false;
                 }
                 if (!isTranslucentComplete) {
-                    return true; // to avoid see the black behind the cur activity, allow swipe only after cur activity is completely transparent
+                    return false; // to avoid see the black behind the cur activity, allow swipe only after cur activity is completely transparent
                 }
                 if (mDragging) {
                     if (!(Math.abs(mCurRootView.getX() - rawX) < 3)) {
