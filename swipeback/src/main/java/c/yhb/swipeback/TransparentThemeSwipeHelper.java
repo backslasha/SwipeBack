@@ -62,10 +62,13 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
                 if (mAnimating) {
                     return false;
                 }
-                if (!isTranslucentComplete) {
-                    return false; // to avoid see the black behind the cur activity, allow swipe only after cur activity is completely transparent
-                }
                 if (mDragging) {
+
+                    Log.d(TAG, "handleTouchEvent: isTranslucentComplete=" + isTranslucentComplete);
+                    if (!isTranslucentComplete) {
+                        return false; // to avoid see the black behind the cur activity, allow swipe only after cur activity is completely transparent
+                    }
+
                     if (!(Math.abs(mCurRootView.getX() - rawX) < 3)) {
                         draggingTo(rawX);
                     }
@@ -89,9 +92,9 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
     private void readyDragging() {
         mDragging = true;
 
-        mPreActivity = (AppCompatActivity) SwipeBackSupport.getInstance().getPenultimateActivity();
+        mPreActivity = (AppCompatActivity) SwipeBackSupport.getInstance().getPenultimateActivity(mCurActivity);
 
-        if (mPreActivity == null) {
+        if (mPreActivity == null || mPreActivity == mCurActivity) {
             mDragging = false;
             return;
         }
@@ -120,30 +123,31 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
 
     private void convertActivityToTranslucent(AppCompatActivity activity) {
         isTranslucentComplete = false;
-        Log.d(TAG, "convertActivityToTranslucent: ");
+        final long start = System.currentTimeMillis();
 
         try {
-            Class mTranslucentConversionListenerClass = null;
-            Object translucentConversionListener = null;
+            Class translucentConversionListenerClass = null;
+            Object callback = null;
 
             //获取透明转换回调类的class对象
             Class[] clazzArray = Activity.class.getDeclaredClasses();
             for (Class clazz : clazzArray) {
                 if (clazz.getSimpleName().contains("TranslucentConversionListener")) {
-                    mTranslucentConversionListenerClass = clazz;
+                    translucentConversionListenerClass = clazz;
                 }
             }
 
             //代理透明转换回调
-            if (mTranslucentConversionListenerClass != null) {
+            if (translucentConversionListenerClass != null) {
                 InvocationHandler invocationHandler = new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                         isTranslucentComplete = true;
+                        Log.d(TAG, "convertActivityToTranslucent: " + (System.currentTimeMillis() - start) + "ms");
                         return null;
                     }
                 };
-                translucentConversionListener = Proxy.newProxyInstance(mTranslucentConversionListenerClass.getClassLoader(), new Class[]{mTranslucentConversionListenerClass}, invocationHandler);
+                callback = Proxy.newProxyInstance(translucentConversionListenerClass.getClassLoader(), new Class[]{translucentConversionListenerClass}, invocationHandler);
             }
 
             //利用反射将窗口转为透明，注意 SDK21 及以上参数有所不同
@@ -157,29 +161,24 @@ public class TransparentThemeSwipeHelper implements SwipeBackActivity.SwipeBackH
                 } catch (Exception ignored) {
                 }
                 @SuppressLint("PrivateApi")
-                Method convertToTranslucent = Activity.class.getDeclaredMethod("convertToTranslucent", mTranslucentConversionListenerClass, ActivityOptions.class);
+                Method convertToTranslucent = Activity.class.getDeclaredMethod("convertToTranslucent", translucentConversionListenerClass, ActivityOptions.class);
                 convertToTranslucent.setAccessible(true);
-                convertToTranslucent.invoke(activity, translucentConversionListener, options);
+                convertToTranslucent.invoke(activity, callback, options);
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 @SuppressLint("PrivateApi")
-                Method convertToTranslucent = Activity.class.getDeclaredMethod("convertToTranslucent", mTranslucentConversionListenerClass);
+                Method convertToTranslucent = Activity.class.getDeclaredMethod("convertToTranslucent", translucentConversionListenerClass);
                 convertToTranslucent.setAccessible(true);
-                convertToTranslucent.invoke(activity, translucentConversionListener);
+                convertToTranslucent.invoke(activity, callback);
             } else {
                 Log.e(TAG, "convertActivityToTranslucent: invoked below api 19.");
             }
 
-            if (translucentConversionListener == null) {
-                isTranslucentComplete = true;
-            }
-
         } catch (Throwable ignored) {
-            isTranslucentComplete = true;
+
         }
 
         //去除窗口背景
         activity.getWindow().setBackgroundDrawable(null);
-        isTranslucentComplete = true;
     }
 
     private void convertActivityFromTranslucent(AppCompatActivity activity) {

@@ -80,11 +80,10 @@ public class MoveContentViewSwipeHelper implements SwipeBackActivity.SwipeBackHe
     private void readyDragging() {
         mDragging = true;
 
-        mPreActivity = (AppCompatActivity) SwipeBackSupport.getInstance().getPenultimateActivity();
+        mPreActivity = (AppCompatActivity) SwipeBackSupport.getInstance().getPenultimateActivity(mCurActivity);
 
-        if (mPreActivity == null) {
+        if (mPreActivity == null || mPreActivity == mCurActivity) {
             mDragging = false;
-            return;
         }
 
         ViewGroup curDecorView = (ViewGroup) mCurActivity.getWindow().getDecorView();

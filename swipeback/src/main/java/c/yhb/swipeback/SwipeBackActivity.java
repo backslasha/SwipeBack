@@ -1,5 +1,6 @@
 package c.yhb.swipeback;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -16,7 +17,11 @@ public abstract class SwipeBackActivity extends AppCompatActivity {
     }
 
     protected SwipeBackHelper createSwipeHelper() {
-        return null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            return new TransparentThemeSwipeHelper(this);
+        } else {
+            return new MoveContentViewSwipeHelper(this);
+        }
     }
 
     @Override
@@ -29,7 +34,7 @@ public abstract class SwipeBackActivity extends AppCompatActivity {
         return super.dispatchTouchEvent(ev);
     }
 
-    protected interface SwipeBackHelper{
+    protected interface SwipeBackHelper {
         boolean handleTouchEvent(MotionEvent event);
     }
 }
